@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BolcherDBModelLibrary;
 using BolcherDBDataAccessLibrary;
+using BolcherDBModelLibrary.Interfaces;
 
 namespace BolcherDbAPI.Controllers
 {
@@ -14,72 +15,78 @@ namespace BolcherDbAPI.Controllers
     [ApiController]
     public class ColorsController : ControllerBase
     {
-        private readonly BolcherDBContext _context;
+        private readonly IColorRepository _colorRepository;
 
-        public ColorsController(BolcherDBContext context)
+        public ColorsController(IColorRepository colorRepository)
         {
-            _context = context;
+            _colorRepository = colorRepository;
         }
 
         // GET: api/Colors
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Color>>> GetColors()
+        public async Task<IActionResult> GetColors()
         {
-            return await _context.Colors.ToListAsync();
+            var colors = await _colorRepository.GetAllAsync();
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            return Ok(colors);
         }
 
         // GET: api/Colors/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Color>> GetColor(int id)
+        public async Task<IActionResult> GetColor(int id)
         {
-            var color = await _context.Colors.FindAsync(id);
-
-            if (color == null)
-            {
+            if (!await _colorRepository.ExistsAsync(id))
                 return NotFound();
-            }
 
-            return color;
+            var color = await _colorRepository.GetByIdAsync(id);
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            return Ok(color);
         }
 
         // PUT: api/Colors/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutColor(int id, Color color)
         {
+            if (color == null)
+                return BadRequest(ModelState);
             if (id != color.Id)
-            {
                 return BadRequest();
-            }
+            if (!await _colorRepository.ExistsAsync(id))
+                return NotFound();
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            _context.Entry(color).State = EntityState.Modified;
-
-            try
+            if (!await _colorRepository.UpdateAsync(color))
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ColorExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                ModelState.AddModelError("", "Something went wrong updating the color.");
+                return StatusCode(500, ModelState);
             }
 
             return NoContent();
         }
 
         // POST: api/Colors
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Color>> PostColor(Color color)
+        public async Task<IActionResult> PostColor(Color color)
         {
-            _context.Colors.Add(color);
-            await _context.SaveChangesAsync();
+            if (color == null)
+                return BadRequest(ModelState);
+            if (await _colorRepository.ExistsAsync(color.Id))
+                ModelState.AddModelError("", $"Color with id '{color.Id}' already exists.");
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (!await _colorRepository.AddAsync(color))
+            {
+                ModelState.AddModelError("", "Something went wrong adding the color");
+                return StatusCode(500, ModelState);                    
+            }
 
             return CreatedAtAction("GetColor", new { id = color.Id }, color);
         }
@@ -88,21 +95,17 @@ namespace BolcherDbAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteColor(int id)
         {
-            var color = await _context.Colors.FindAsync(id);
-            if (color == null)
-            {
+            if (!await _colorRepository.ExistsAsync(id))
                 return NotFound();
-            }
 
-            _context.Colors.Remove(color);
-            await _context.SaveChangesAsync();
+            if(!await _colorRepository.DeleteAsync(id))
+            {
+                ModelState.AddModelError("", "Something went wrong deleting the color.");
+                return StatusCode(500, ModelState);
+            }
 
             return NoContent();
         }
 
-        private bool ColorExists(int id)
-        {
-            return _context.Colors.Any(e => e.Id == id);
-        }
     }
 }

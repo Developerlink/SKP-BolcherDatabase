@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BolcherDBModelLibrary;
 using BolcherDBDataAccessLibrary;
+using BolcherDBModelLibrary.Interfaces;
 
 namespace BolcherDbAPI.Controllers
 {
@@ -14,72 +15,78 @@ namespace BolcherDbAPI.Controllers
     [ApiController]
     public class SournessesController : ControllerBase
     {
-        private readonly BolcherDBContext _context;
+        private readonly ISournessRepository _sournessRepository;
 
-        public SournessesController(BolcherDBContext context)
+        public SournessesController(ISournessRepository sournessRepository)
         {
-            _context = context;
+            _sournessRepository = sournessRepository;
         }
 
         // GET: api/Sournesses
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Sourness>>> GetSournesses()
+        public async Task<IActionResult> GetSournesses()
         {
-            return await _context.Sournesses.ToListAsync();
+            var sournesses = await _sournessRepository.GetAllAsync();
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            return Ok(sournesses);
         }
 
         // GET: api/Sournesses/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Sourness>> GetSourness(int id)
+        public async Task<IActionResult> GetSourness(int id)
         {
-            var sourness = await _context.Sournesses.FindAsync(id);
-
-            if (sourness == null)
-            {
+            if (!await _sournessRepository.ExistsAsync(id))
                 return NotFound();
-            }
 
-            return sourness;
+            var sourness = await _sournessRepository.GetByIdAsync(id);
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            return Ok(sourness);
         }
 
         // PUT: api/Sournesses/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutSourness(int id, Sourness sourness)
         {
+            if (sourness == null)
+                return BadRequest(ModelState);
             if (id != sourness.Id)
-            {
                 return BadRequest();
-            }
+            if (!await _sournessRepository.ExistsAsync(id))
+                return NotFound();
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            _context.Entry(sourness).State = EntityState.Modified;
-
-            try
+            if (!await _sournessRepository.UpdateAsync(sourness))
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!SournessExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                ModelState.AddModelError("", "Something went wrong updating the sourness");
+                return StatusCode(500, ModelState);
             }
 
             return NoContent();
         }
 
         // POST: api/Sournesses
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Sourness>> PostSourness(Sourness sourness)
+        public async Task<IActionResult> PostSourness(Sourness sourness)
         {
-            _context.Sournesses.Add(sourness);
-            await _context.SaveChangesAsync();
+            if (sourness == null)
+                return BadRequest(ModelState);
+            if (await _sournessRepository.ExistsAsync(sourness.Id))
+                ModelState.AddModelError("", "A sourness with that id already exists.");
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if(!await _sournessRepository.AddAsync(sourness))
+            {
+                ModelState.AddModelError("", "Something went wrong adding the sourness.");
+                return StatusCode(500, ModelState);
+            }
 
             return CreatedAtAction("GetSourness", new { id = sourness.Id }, sourness);
         }
@@ -88,21 +95,19 @@ namespace BolcherDbAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteSourness(int id)
         {
-            var sourness = await _context.Sournesses.FindAsync(id);
-            if (sourness == null)
-            {
+            if (!await _sournessRepository.ExistsAsync(id))
                 return NotFound();
-            }
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            _context.Sournesses.Remove(sourness);
-            await _context.SaveChangesAsync();
+            if (!await _sournessRepository.DeleteAsync(id))
+            {
+                ModelState.AddModelError("", "Something went wrong deleting the sourness.");
+                return StatusCode(500, ModelState);
+            }
 
             return NoContent();
         }
 
-        private bool SournessExists(int id)
-        {
-            return _context.Sournesses.Any(e => e.Id == id);
-        }
     }
 }

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BolcherDBModelLibrary;
 using BolcherDBDataAccessLibrary;
+using BolcherDBModelLibrary.Interfaces;
 
 namespace BolcherDbAPI.Controllers
 {
@@ -14,72 +15,78 @@ namespace BolcherDbAPI.Controllers
     [ApiController]
     public class FlavoursController : ControllerBase
     {
-        private readonly BolcherDBContext _context;
+        private readonly IFlavourRepository _flavourRepository;
 
-        public FlavoursController(BolcherDBContext context)
+        public FlavoursController(IFlavourRepository flavourRepository)
         {
-            _context = context;
+            _flavourRepository = flavourRepository;
         }
 
         // GET: api/Flavours
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Flavour>>> GetFlavours()
+        public async Task<IActionResult> GetFlavours()
         {
-            return await _context.Flavours.ToListAsync();
+            var flavours = await _flavourRepository.GetAllAsync();
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            return Ok(flavours);
         }
 
         // GET: api/Flavours/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Flavour>> GetFlavour(int id)
+        public async Task<IActionResult> GetFlavour(int id)
         {
-            var flavour = await _context.Flavours.FindAsync(id);
-
-            if (flavour == null)
-            {
+            if (!await _flavourRepository.ExistsAsync(id))
                 return NotFound();
-            }
 
-            return flavour;
+            var flavour = await _flavourRepository.GetByIdAsync(id);
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            return Ok(flavour);
         }
 
         // PUT: api/Flavours/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutFlavour(int id, Flavour flavour)
         {
+            if (flavour == null)
+                return BadRequest(ModelState);
             if (id != flavour.Id)
-            {
                 return BadRequest();
-            }
+            if (!await _flavourRepository.ExistsAsync(id))
+                return NotFound();
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            _context.Entry(flavour).State = EntityState.Modified;
-
-            try
+            if (!await _flavourRepository.UpdateAsync(flavour))
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!FlavourExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                ModelState.AddModelError("", "Something went wrong updating the flavour");
+                return StatusCode(500, ModelState);
             }
 
             return NoContent();
         }
 
         // POST: api/Flavours
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Flavour>> PostFlavour(Flavour flavour)
+        public async Task<IActionResult> PostFlavour(Flavour flavour)
         {
-            _context.Flavours.Add(flavour);
-            await _context.SaveChangesAsync();
+            if (flavour == null)
+                return BadRequest(ModelState);
+            if (await _flavourRepository.ExistsAsync(flavour.Id))
+                ModelState.AddModelError("", "A flavour with that id already exists");
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if(!await _flavourRepository.AddAsync(flavour))
+            {
+                ModelState.AddModelError("", "Something went wrong adding the flavour");
+                return StatusCode(500, ModelState);
+            }
 
             return CreatedAtAction("GetFlavour", new { id = flavour.Id }, flavour);
         }
@@ -88,21 +95,19 @@ namespace BolcherDbAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteFlavour(int id)
         {
-            var flavour = await _context.Flavours.FindAsync(id);
-            if (flavour == null)
-            {
+            if (!await _flavourRepository.ExistsAsync(id))
                 return NotFound();
-            }
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            _context.Flavours.Remove(flavour);
-            await _context.SaveChangesAsync();
+            if (!await _flavourRepository.DeleteAsync(id))
+            {
+                ModelState.AddModelError("", "Something went wrong deleting the flavour");
+                return StatusCode(500, ModelState);
+            }
 
             return NoContent();
         }
 
-        private bool FlavourExists(int id)
-        {
-            return _context.Flavours.Any(e => e.Id == id);
-        }
     }
 }

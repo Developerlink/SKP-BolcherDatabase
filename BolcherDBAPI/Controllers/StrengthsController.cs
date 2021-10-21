@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BolcherDBModelLibrary;
 using BolcherDBDataAccessLibrary;
+using BolcherDBModelLibrary.Interfaces;
 
 namespace BolcherDbAPI.Controllers
 {
@@ -14,72 +15,78 @@ namespace BolcherDbAPI.Controllers
     [ApiController]
     public class StrengthsController : ControllerBase
     {
-        private readonly BolcherDBContext _context;
+        private readonly IStrengthRepository _strengthRepository;
 
-        public StrengthsController(BolcherDBContext context)
+        public StrengthsController(IStrengthRepository strengthRepository)
         {
-            _context = context;
+            _strengthRepository = strengthRepository;
         }
 
         // GET: api/Strengths
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Strength>>> GetStrengths()
+        public async Task<IActionResult> GetStrengths()
         {
-            return await _context.Strengths.ToListAsync();
+            var strengths = await _strengthRepository.GetAllAsync();
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            return Ok(strengths);
         }
 
         // GET: api/Strengths/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Strength>> GetStrength(int id)
+        public async Task<IActionResult> GetStrength(int id)
         {
-            var strength = await _context.Strengths.FindAsync(id);
-
-            if (strength == null)
-            {
+            if (!await _strengthRepository.ExistsAsync(id))
                 return NotFound();
-            }
 
-            return strength;
+            var strength = await _strengthRepository.GetByIdAsync(id);
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            return Ok(strength);
         }
 
         // PUT: api/Strengths/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutStrength(int id, Strength strength)
         {
+            if (strength == null)
+                return BadRequest(ModelState);
             if (id != strength.Id)
-            {
                 return BadRequest();
-            }
-
-            _context.Entry(strength).State = EntityState.Modified;
-
-            try
+            if (!await _strengthRepository.ExistsAsync(id))
+                NotFound();
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            
+            if (!await _strengthRepository.UpdateAsync(strength))
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!StrengthExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                ModelState.AddModelError("", "Something went wrong updating the strength.");
+                return StatusCode(500, ModelState);
             }
 
             return NoContent();
         }
 
         // POST: api/Strengths
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Strength>> PostStrength(Strength strength)
+        public async Task<IActionResult> PostStrength(Strength strength)
         {
-            _context.Strengths.Add(strength);
-            await _context.SaveChangesAsync();
+            if (strength == null)
+                return BadRequest(ModelState);
+            if (await _strengthRepository.ExistsAsync(strength.Id))
+                ModelState.AddModelError("", "A strength with that id already exists.");
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (!await _strengthRepository.AddAsync(strength))
+            {
+                ModelState.AddModelError("", "Something went wrong adding the strength.");
+                return StatusCode(500, ModelState);
+            }
 
             return CreatedAtAction("GetStrength", new { id = strength.Id }, strength);
         }
@@ -88,21 +95,18 @@ namespace BolcherDbAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteStrength(int id)
         {
-            var strength = await _context.Strengths.FindAsync(id);
-            if (strength == null)
-            {
+            if (!await _strengthRepository.ExistsAsync(id))
                 return NotFound();
-            }
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            _context.Strengths.Remove(strength);
-            await _context.SaveChangesAsync();
+            if (!await _strengthRepository.DeleteAsync(id))
+            {
+                ModelState.AddModelError("", "Something went wrong deleting the strenght.");
+                return StatusCode(500, ModelState);
+            }    
 
             return NoContent();
-        }
-
-        private bool StrengthExists(int id)
-        {
-            return _context.Strengths.Any(e => e.Id == id);
         }
     }
 }

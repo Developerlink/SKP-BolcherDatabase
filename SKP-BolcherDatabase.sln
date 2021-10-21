@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BolcherDBUI", "BolcherDBUI\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BolcherDBAPI", "BolcherDBAPI\BolcherDBAPI.csproj", "{6D306BA6-77FC-4C7F-8B8F-B677EAC36644}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BolcherDBAPI.IntegrationTests", "BolcherDBAPI.IntegrationTests\BolcherDBAPI.IntegrationTests.csproj", "{F94F051A-5FE8-4883-AAFA-853A64CEA324}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{6D306BA6-77FC-4C7F-8B8F-B677EAC36644}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6D306BA6-77FC-4C7F-8B8F-B677EAC36644}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6D306BA6-77FC-4C7F-8B8F-B677EAC36644}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F94F051A-5FE8-4883-AAFA-853A64CEA324}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F94F051A-5FE8-4883-AAFA-853A64CEA324}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F94F051A-5FE8-4883-AAFA-853A64CEA324}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F94F051A-5FE8-4883-AAFA-853A64CEA324}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

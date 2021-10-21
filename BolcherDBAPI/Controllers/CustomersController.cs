@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BolcherDBModelLibrary;
 using BolcherDBDataAccessLibrary;
+using BolcherDBModelLibrary.Interfaces;
 
 namespace BolcherDbAPI.Controllers
 {
@@ -14,72 +15,78 @@ namespace BolcherDbAPI.Controllers
     [ApiController]
     public class CustomersController : ControllerBase
     {
-        private readonly BolcherDBContext _context;
+        private readonly ICustomerRepository _customerRepository;
 
-        public CustomersController(BolcherDBContext context)
+        public CustomersController(ICustomerRepository customerRepository)
         {
-            _context = context;
+            _customerRepository = customerRepository;
         }
 
         // GET: api/Customers
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Customer>>> GetCustomers()
+        public async Task<IActionResult> GetCustomers()
         {
-            return await _context.Customers.ToListAsync();
+            var customers = await _customerRepository.GetAllAsync();
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            return Ok(customers);
         }
 
         // GET: api/Customers/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Customer>> GetCustomer(int id)
+        public async Task<IActionResult> GetCustomer(int id)
         {
-            var customer = await _context.Customers.FindAsync(id);
-
-            if (customer == null)
-            {
+            if (!await _customerRepository.ExistsAsync(id))
                 return NotFound();
-            }
 
-            return customer;
+            var customer = await _customerRepository.GetByIdAsync(id);
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            return Ok(customer);
         }
 
         // PUT: api/Customers/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutCustomer(int id, Customer customer)
         {
+            if (customer == null)
+                return BadRequest(ModelState);
             if (id != customer.Id)
-            {
                 return BadRequest();
-            }
+            if (!await _customerRepository.ExistsAsync(id))
+                return NotFound();
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            _context.Entry(customer).State = EntityState.Modified;
-
-            try
+            if (!await _customerRepository.UpdateAsync(customer))
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!CustomerExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                ModelState.AddModelError("", "Something went wrong updating the customer");
+                return StatusCode(500, ModelState);
             }
 
             return NoContent();
         }
 
         // POST: api/Customers
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Customer>> PostCustomer(Customer customer)
+        public async Task<IActionResult> PostCustomer(Customer customer)
         {
-            _context.Customers.Add(customer);
-            await _context.SaveChangesAsync();
+            if (customer == null)
+                return BadRequest(ModelState);
+            if (await _customerRepository.ExistsAsync(customer.Id))
+                ModelState.AddModelError("", "Customer with that id already exists");
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if(!await _customerRepository.AddAsync(customer))
+            {
+                ModelState.AddModelError("", "Something went wrong adding the customer");
+                return StatusCode(500, ModelState);
+            }
 
             return CreatedAtAction("GetCustomer", new { id = customer.Id }, customer);
         }
@@ -88,21 +95,18 @@ namespace BolcherDbAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCustomer(int id)
         {
-            var customer = await _context.Customers.FindAsync(id);
-            if (customer == null)
-            {
+            if (!await _customerRepository.ExistsAsync(id))
                 return NotFound();
-            }
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            _context.Customers.Remove(customer);
-            await _context.SaveChangesAsync();
+            if(!await _customerRepository.DeleteAsync(id))
+            {
+                ModelState.AddModelError("", "Something went wrong deleting the customer");
+            }
 
             return NoContent();
         }
 
-        private bool CustomerExists(int id)
-        {
-            return _context.Customers.Any(e => e.Id == id);
-        }
     }
 }

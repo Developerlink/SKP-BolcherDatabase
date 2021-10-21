@@ -57,8 +57,15 @@ namespace BolcherDBDataAccessLibrary.Repositories
 
         public async Task<bool> SaveAsync()
         {
-            var rowsChanged = await Context.SaveChangesAsync();
-            return rowsChanged >= 0;
+            try
+            {
+                var rowsChanged = await Context.SaveChangesAsync();
+                return rowsChanged >= 0;
+            }
+            catch (System.Exception)
+            {
+                throw;
+            }
         }
 
         public async Task<bool> UpdateAsync(TEntity entity)

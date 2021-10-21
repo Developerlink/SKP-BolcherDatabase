@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BolcherDBModelLibrary;
 using BolcherDBDataAccessLibrary;
+using BolcherDBModelLibrary.Interfaces;
 
 namespace BolcherDbAPI.Controllers
 {
@@ -14,72 +15,78 @@ namespace BolcherDbAPI.Controllers
     [ApiController]
     public class SalesOrdersController : ControllerBase
     {
-        private readonly BolcherDBContext _context;
+        private readonly ISalesOrderRepository _salesOrderRepository;
 
-        public SalesOrdersController(BolcherDBContext context)
+        public SalesOrdersController(ISalesOrderRepository salesOrderRepository)
         {
-            _context = context;
+            _salesOrderRepository = salesOrderRepository;
         }
 
         // GET: api/SalesOrders
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<SalesOrder>>> GetSalesOrders()
+        public async Task<IActionResult> GetSalesOrders()
         {
-            return await _context.SalesOrders.ToListAsync();
+            var salesOrders = await _salesOrderRepository.GetAllAsync();
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            return Ok(salesOrders);
         }
 
         // GET: api/SalesOrders/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<SalesOrder>> GetSalesOrder(int id)
+        public async Task<IActionResult> GetSalesOrder(int id)
         {
-            var salesOrder = await _context.SalesOrders.FindAsync(id);
-
-            if (salesOrder == null)
-            {
+            if (!await _salesOrderRepository.ExistsAsync(id))
                 return NotFound();
-            }
 
-            return salesOrder;
+            var salesOrder = await _salesOrderRepository.GetByIdAsync(id);
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            return Ok(salesOrder);
         }
 
         // PUT: api/SalesOrders/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutSalesOrder(int id, SalesOrder salesOrder)
         {
+            if (salesOrder == null)
+                return BadRequest(ModelState);
             if (id != salesOrder.Id)
-            {
                 return BadRequest();
-            }
+            if (!await _salesOrderRepository.ExistsAsync(id))
+                return NotFound();
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            _context.Entry(salesOrder).State = EntityState.Modified;
-
-            try
+            if (!await _salesOrderRepository.UpdateAsync(salesOrder))
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!SalesOrderExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                ModelState.AddModelError("", "Something went wrong updating the sales order");
+                return StatusCode(500, ModelState);
             }
 
             return NoContent();
         }
 
         // POST: api/SalesOrders
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<SalesOrder>> PostSalesOrder(SalesOrder salesOrder)
+        public async Task<IActionResult> PostSalesOrder(SalesOrder salesOrder)
         {
-            _context.SalesOrders.Add(salesOrder);
-            await _context.SaveChangesAsync();
+            if (salesOrder == null)
+                return BadRequest(ModelState);
+            if (await _salesOrderRepository.ExistsAsync(salesOrder.Id))
+                ModelState.AddModelError("", "A sales order with that id already exists");
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if(!await _salesOrderRepository.AddAsync(salesOrder))
+            {
+                ModelState.AddModelError("", "Something went wrong adding the sales order.");
+                return StatusCode(500, ModelState);
+            }
 
             return CreatedAtAction("GetSalesOrder", new { id = salesOrder.Id }, salesOrder);
         }
@@ -88,21 +95,19 @@ namespace BolcherDbAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteSalesOrder(int id)
         {
-            var salesOrder = await _context.SalesOrders.FindAsync(id);
-            if (salesOrder == null)
-            {
+            if (!await _salesOrderRepository.ExistsAsync(id))
                 return NotFound();
-            }
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            _context.SalesOrders.Remove(salesOrder);
-            await _context.SaveChangesAsync();
+            if (!await _salesOrderRepository.DeleteAsync(id))
+            {
+                ModelState.AddModelError("", "Something went wrong deleting the sales order.");
+                return StatusCode(500, ModelState);
+            }
 
             return NoContent();
         }
 
-        private bool SalesOrderExists(int id)
-        {
-            return _context.SalesOrders.Any(e => e.Id == id);
-        }
     }
 }
