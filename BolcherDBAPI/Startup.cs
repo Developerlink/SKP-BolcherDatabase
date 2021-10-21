@@ -31,6 +31,7 @@ namespace BolcherDBAPI
         {
             services.AddControllers();
             services.AddControllers().AddNewtonsoftJson(options => options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+            services.AddHealthChecks();
 
             var connectionString = Configuration.GetConnectionString("bolcherDbConnectionString");
             services.AddDbContext<BolcherDBContext>(cnn => cnn.UseSqlServer(connectionString));
@@ -78,6 +79,7 @@ namespace BolcherDBAPI
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapHealthChecks("/healthcheck");
                 endpoints.MapControllers();
             });
         }
