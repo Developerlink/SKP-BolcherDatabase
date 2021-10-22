@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
+using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net.Http;
 using System.Net.Http.Json;
 using BolcherDBModelLibrary;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Newtonsoft.Json;
 
 namespace BolcherDBAPI.IntegrationTests.Controllers
