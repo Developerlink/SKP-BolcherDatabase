@@ -24,6 +24,7 @@ namespace BolcherDbAPI.Controllers
 
         // GET: api/Candies
         [HttpGet]
+        [ResponseCache(Duration = 300)]
         public async Task<IActionResult> GetCandies()
         {
             var candies = await _candyRepository.GetAllAsync();
