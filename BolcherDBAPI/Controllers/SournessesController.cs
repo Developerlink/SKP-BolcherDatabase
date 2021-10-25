@@ -62,9 +62,13 @@ namespace BolcherDbAPI.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (!await _sournessRepository.UpdateAsync(sourness))
+            try
             {
-                ModelState.AddModelError("", "Something went wrong updating the sourness");
+
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);
             }
 
@@ -82,9 +86,13 @@ namespace BolcherDbAPI.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if(!await _sournessRepository.AddAsync(sourness))
+            try
             {
-                ModelState.AddModelError("", "Something went wrong adding the sourness.");
+                await _sournessRepository.AddAsync(sourness);
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);
             }
 
@@ -100,9 +108,13 @@ namespace BolcherDbAPI.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (!await _sournessRepository.DeleteAsync(id))
+            try
             {
-                ModelState.AddModelError("", "Something went wrong deleting the sourness.");
+                await _sournessRepository.DeleteAsync(id);
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);
             }
 

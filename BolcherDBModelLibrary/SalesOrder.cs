@@ -1,10 +1,13 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 #nullable disable
 
 namespace BolcherDBModelLibrary
 {
+    [Index(IsUnique = true, Name = nameof(OrderDate))]
     public partial class SalesOrder
     {
         public SalesOrder()
@@ -12,6 +15,7 @@ namespace BolcherDBModelLibrary
             OrderLines = new HashSet<OrderLine>();
         }
 
+        [Key]
         public int Id { get; set; }
         public int CustomerId { get; set; }
         public DateTime OrderDate { get; set; }

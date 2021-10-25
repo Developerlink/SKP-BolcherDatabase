@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using BolcherDBModelLibrary;
 using BolcherDBDataAccessLibrary;
 using BolcherDBModelLibrary.Interfaces;
+using BolcherDBAPI.Extensions;
 
 namespace BolcherDbAPI.Controllers
 {
@@ -62,9 +63,13 @@ namespace BolcherDbAPI.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (!await _colorRepository.UpdateAsync(color))
+            try
             {
-                ModelState.AddModelError("", "Something went wrong updating the color.");
+                await _colorRepository.UpdateAsync(color);
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);
             }
 
@@ -72,7 +77,7 @@ namespace BolcherDbAPI.Controllers
         }
 
         // POST: api/Colors
-        [HttpPost]
+        [HttpPost]       
         public async Task<IActionResult> PostColor(Color color)
         {
             if (color == null)
@@ -82,11 +87,22 @@ namespace BolcherDbAPI.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (!await _colorRepository.AddAsync(color))
+            try
             {
-                ModelState.AddModelError("", "Something went wrong adding the color");
-                return StatusCode(500, ModelState);                    
+                await _colorRepository.AddAsync(color);
             }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("errors", e.GetOriginalException().Message);
+                return BadRequest(ModelState);
+            }
+
+
+            //if (!await _colorRepository.AddAsync(color))
+            //{
+            //    ModelState.AddModelError("", "Something went wrong adding the color");
+            //    return StatusCode(500, ModelState);                
+            //}
 
             return CreatedAtAction("GetColor", new { id = color.Id }, color);
         }
@@ -98,9 +114,13 @@ namespace BolcherDbAPI.Controllers
             if (!await _colorRepository.ExistsAsync(id))
                 return NotFound();
 
-            if(!await _colorRepository.DeleteAsync(id))
+            try
             {
-                ModelState.AddModelError("", "Something went wrong deleting the color.");
+                await _colorRepository.DeleteAsync(id);
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);
             }
 

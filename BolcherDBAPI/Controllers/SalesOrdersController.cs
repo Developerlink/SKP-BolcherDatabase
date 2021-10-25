@@ -62,9 +62,13 @@ namespace BolcherDbAPI.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (!await _salesOrderRepository.UpdateAsync(salesOrder))
+            try
             {
-                ModelState.AddModelError("", "Something went wrong updating the sales order");
+                await _salesOrderRepository.UpdateAsync(salesOrder);
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);
             }
 
@@ -82,9 +86,13 @@ namespace BolcherDbAPI.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if(!await _salesOrderRepository.AddAsync(salesOrder))
+            try
             {
-                ModelState.AddModelError("", "Something went wrong adding the sales order.");
+                await _salesOrderRepository.AddAsync(salesOrder);
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);
             }
 
@@ -100,9 +108,13 @@ namespace BolcherDbAPI.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (!await _salesOrderRepository.DeleteAsync(id))
+            try
             {
-                ModelState.AddModelError("", "Something went wrong deleting the sales order.");
+                await _salesOrderRepository.DeleteAsync(id);
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);
             }
 

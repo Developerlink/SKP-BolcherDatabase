@@ -77,9 +77,13 @@ namespace BolcherDbAPI.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (! await _candyRepository.UpdateAsync(candy))
+            try
             {
-                ModelState.AddModelError("", "Something went wrong updating the candy.");
+                await _candyRepository.UpdateAsync(candy);
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);
             }
 
@@ -97,9 +101,13 @@ namespace BolcherDbAPI.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (! await _candyRepository.AddAsync(candy))
+            try
             {
-                ModelState.AddModelError("", "Something went wrong adding the candy.");
+                await _candyRepository.AddAsync(candy);
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);
             }
 
@@ -115,11 +123,14 @@ namespace BolcherDbAPI.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (! await _candyRepository.DeleteAsync(id))
+            try
             {
-                ModelState.AddModelError("", "Something went wrong deleting the candy.");
+                await _candyRepository.DeleteAsync(id);
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);
-
             }
 
             return NoContent();

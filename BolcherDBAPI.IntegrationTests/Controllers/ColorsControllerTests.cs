@@ -5,10 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.Mvc;
 using System.Net.Http;
 using System.Net.Http.Json;
 using BolcherDBModelLibrary;
 using Newtonsoft.Json;
+using System.Net;
 
 namespace BolcherDBAPI.IntegrationTests.Controllers
 {
@@ -45,6 +47,39 @@ namespace BolcherDBAPI.IntegrationTests.Controllers
             //Assert.Equal(expected, actual.Count);
 
             Assert.True(actual.Count > 0);
+        }
+
+        [Fact]
+        public async Task Post_WithoutName_ReturnsInternalServerError()
+        {
+            var color = new Color();
+
+            // By default null properties will be included in the serializes json.
+            // To reduce payload sizes many httpclients avoid sending null entirely. 
+            // We can test for that case by adding som serialization options that we define.
+            var response = await _client.PostAsJsonAsync("", color);
+
+            Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);                        
+        }
+
+        [Fact]
+        public async Task Post_WithoutName_ReturnsExpectedProblemDetails()
+        {
+            var color = new Color();
+
+            // By default null properties will be included in the serializes json.
+            // To reduce payload sizes many httpclients avoid sending null entirely. 
+            // We can test for that case by adding som serialization options that we define.
+            var response = await _client.PostAsJsonAsync("", color);
+
+            var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+
+            Assert.Collection(problemDetails.Errors, kvp =>
+            {
+                Assert.Equal("Name", kvp.Key);
+                var error = Assert.Single(kvp.Value);
+
+            });
         }
     }
 }

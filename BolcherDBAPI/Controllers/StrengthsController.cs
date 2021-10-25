@@ -61,11 +61,15 @@ namespace BolcherDbAPI.Controllers
                 NotFound();
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            
-            if (!await _strengthRepository.UpdateAsync(strength))
+
+            try
             {
-                ModelState.AddModelError("", "Something went wrong updating the strength.");
-                return StatusCode(500, ModelState);
+                await _strengthRepository.UpdateAsync(strength);
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("", e.GetBaseException().Message);
+                return StatusCode(500, ModelState);                                
             }
 
             return NoContent();
@@ -82,12 +86,16 @@ namespace BolcherDbAPI.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (!await _strengthRepository.AddAsync(strength))
+            try
             {
-                ModelState.AddModelError("", "Something went wrong adding the strength.");
+                await _strengthRepository.AddAsync(strength);
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);
             }
-
+            
             return CreatedAtAction("GetStrength", new { id = strength.Id }, strength);
         }
 
@@ -100,11 +108,15 @@ namespace BolcherDbAPI.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (!await _strengthRepository.DeleteAsync(id))
+            try
             {
-                ModelState.AddModelError("", "Something went wrong deleting the strenght.");
+                await _strengthRepository.DeleteAsync(id);
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);
-            }    
+            }
 
             return NoContent();
         }
