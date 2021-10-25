@@ -6,7 +6,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace BolcherDBModelLibrary
 {
-    [Index(IsUnique = true, Name = nameof(Name))]
     public partial class Flavour
     {
         public Flavour()

@@ -50,7 +50,7 @@ namespace BolcherDBAPI.IntegrationTests.Controllers
         }
 
         [Fact]
-        public async Task Post_WithoutName_ReturnsInternalServerError()
+        public async Task Post_WithoutName_ReturnsBadRequest()
         {
             var color = new Color();
 
@@ -59,7 +59,7 @@ namespace BolcherDBAPI.IntegrationTests.Controllers
             // We can test for that case by adding som serialization options that we define.
             var response = await _client.PostAsJsonAsync("", color);
 
-            Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);                        
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);                        
         }
 
         [Fact]
@@ -78,7 +78,7 @@ namespace BolcherDBAPI.IntegrationTests.Controllers
             {
                 Assert.Equal("Name", kvp.Key);
                 var error = Assert.Single(kvp.Value);
-
+                Assert.Equal("The Name field is required.", error);
             });
         }
     }

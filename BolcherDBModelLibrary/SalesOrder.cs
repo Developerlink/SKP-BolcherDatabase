@@ -7,7 +7,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace BolcherDBModelLibrary
 {
-    [Index(IsUnique = true, Name = nameof(OrderDate))]
     public partial class SalesOrder
     {
         public SalesOrder()
