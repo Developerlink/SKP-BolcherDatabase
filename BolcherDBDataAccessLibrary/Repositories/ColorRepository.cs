@@ -14,8 +14,8 @@ namespace BolcherDBDataAccessLibrary.Repositories
         public ColorRepository(BolcherDBContext context)
             : base(context)
         {
-        }
-
+        }        
+       
         private async Task<ICollection<Color>> GetByFilterAsync(string filter)
         {
             return await Context.Colors.Where(c => EF.Functions.Like(c.Name, filter)).ToListAsync();
@@ -31,6 +31,14 @@ namespace BolcherDBDataAccessLibrary.Repositories
         Task<ICollection<Color>> ISearchable<Color>.GetByFilterAsync(string filter)
         {
             throw new NotImplementedException();
+        }
+
+        public bool HasUniqueName(int id, string name)
+        {
+            var entity = Context.Strengths.FirstOrDefault(s => s.Name.Trim().ToUpper() == name.Trim().ToUpper() && s.Id != id);
+            if (entity == null)
+                return true;
+            return false;
         }
     }
 }

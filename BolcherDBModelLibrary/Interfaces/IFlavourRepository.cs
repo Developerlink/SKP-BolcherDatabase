@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace BolcherDBModelLibrary.Interfaces
 {
-    public interface IFlavourRepository : IGenericRepository<Flavour>
+    public interface IFlavourRepository : IGenericRepository<Flavour>, IUniqueNameable
     {
     }
 }

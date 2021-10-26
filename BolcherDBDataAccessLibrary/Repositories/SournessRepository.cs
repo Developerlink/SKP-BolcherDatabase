@@ -15,5 +15,13 @@ namespace BolcherDBDataAccessLibrary.Repositories
             : base(context)
         {
         }
+
+        public bool HasUniqueName(int id, string name)
+        {
+            var entity = Context.Strengths.FirstOrDefault(s => s.Name.Trim().ToUpper() == name.Trim().ToUpper() && s.Id != id);
+            if (entity == null)
+                return true;
+            return false;
+        }
     }
 }

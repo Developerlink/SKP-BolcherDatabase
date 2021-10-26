@@ -62,14 +62,11 @@ namespace BolcherDBAPI.IntegrationTests.Controllers
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);                        
         }
 
-        [Fact]
+        [Fact] 
         public async Task Post_WithoutName_ReturnsExpectedProblemDetails()
         {
             var color = new Color();
 
-            // By default null properties will be included in the serializes json.
-            // To reduce payload sizes many httpclients avoid sending null entirely. 
-            // We can test for that case by adding som serialization options that we define.
             var response = await _client.PostAsJsonAsync("", color);
 
             var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
@@ -78,8 +75,32 @@ namespace BolcherDBAPI.IntegrationTests.Controllers
             {
                 Assert.Equal("Name", kvp.Key);
                 var error = Assert.Single(kvp.Value);
-                Assert.Equal("The Name field is required.", error);
+                Assert.Equal("The Name field is required.", error); 
             });
+        }
+
+        [Fact]
+        public async Task Post_WithValidProduct_ReturnsCreatedResult()
+        {
+            var color = new Color { Name = "Blue Steel" };
+
+            var response = await _client.PostAsJsonAsync("", color);
+
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Post_AfterPostingValidProduct_ItCanBeRetrieved()
+        {
+            var color = new Color { Name = "Blue Steel" };
+
+            var response = await _client.PostAsJsonAsync("", color);
+
+            response.EnsureSuccessStatusCode();
+
+            var getResponse = await _client.GetAsync(response.Headers.Location.ToString());
+
+            getResponse.EnsureSuccessStatusCode();
         }
     }
 }

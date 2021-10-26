@@ -1,0 +1,1 @@
+﻿SELECT Id,ColorId,SournessId,StrengthId,FlavourId,Weight,ProductionCost,Name FROM dbo.Candy

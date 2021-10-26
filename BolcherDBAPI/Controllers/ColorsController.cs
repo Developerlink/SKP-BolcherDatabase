@@ -60,6 +60,11 @@ namespace BolcherDbAPI.Controllers
                 return BadRequest();
             if (!await _colorRepository.ExistsAsync(id))
                 return NotFound();
+            if (!_colorRepository.HasUniqueName(id, color.Name))
+            {
+                ModelState.AddModelError("errors", "That name already exists.");
+                return StatusCode(409, ModelState);
+            }
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
@@ -69,7 +74,7 @@ namespace BolcherDbAPI.Controllers
             }
             catch (Exception e)
             {
-                ModelState.AddModelError("", e.GetBaseException().Message);
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);
             }
 
@@ -77,13 +82,21 @@ namespace BolcherDbAPI.Controllers
         }
 
         // POST: api/Colors
-        [HttpPost]       
+        [HttpPost]
         public async Task<IActionResult> PostColor(Color color)
         {
             if (color == null)
                 return BadRequest(ModelState);
             if (await _colorRepository.ExistsAsync(color.Id))
-                ModelState.AddModelError("", $"Color with id '{color.Id}' already exists.");
+            {
+                ModelState.AddModelError("errors", "That ID already exists.");
+                return StatusCode(409, ModelState);
+            }
+            if (!_colorRepository.HasUniqueName(color.Id, color.Name))
+            {
+                ModelState.AddModelError("errors", "That name already exists.");
+                return StatusCode(409, ModelState);
+            }
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
@@ -94,15 +107,8 @@ namespace BolcherDbAPI.Controllers
             catch (Exception e)
             {
                 ModelState.AddModelError("errors", e.GetOriginalException().Message);
-                return BadRequest(ModelState);
+                return StatusCode(500, ModelState);
             }
-
-
-            //if (!await _colorRepository.AddAsync(color))
-            //{
-            //    ModelState.AddModelError("", "Something went wrong adding the color");
-            //    return StatusCode(500, ModelState);                
-            //}
 
             return CreatedAtAction("GetColor", new { id = color.Id }, color);
         }
@@ -120,7 +126,7 @@ namespace BolcherDbAPI.Controllers
             }
             catch (Exception e)
             {
-                ModelState.AddModelError("", e.GetBaseException().Message);
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);
             }
 

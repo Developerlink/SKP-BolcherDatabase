@@ -59,6 +59,11 @@ namespace BolcherDbAPI.Controllers
                 return BadRequest();
             if (!await _strengthRepository.ExistsAsync(id))
                 NotFound();
+            if (!_strengthRepository.HasUniqueName(id, strength.Name))
+            {
+                ModelState.AddModelError("errors", "That name already exists.");
+                return StatusCode(409, ModelState);
+            }
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
@@ -68,7 +73,7 @@ namespace BolcherDbAPI.Controllers
             }
             catch (Exception e)
             {
-                ModelState.AddModelError("", e.GetBaseException().Message);
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);                                
             }
 
@@ -77,26 +82,35 @@ namespace BolcherDbAPI.Controllers
 
         // POST: api/Strengths
         [HttpPost]
-        public async Task<IActionResult> PostStrength(Strength strength)
+        public async Task<IActionResult> PostStrength(Strength newStrength)
         {
-            if (strength == null)
+            if (newStrength == null)
                 return BadRequest(ModelState);
-            if (await _strengthRepository.ExistsAsync(strength.Id))
-                ModelState.AddModelError("", "A strength with that id already exists.");
+            if (await _strengthRepository.ExistsAsync(newStrength.Id))
+            {
+                ModelState.AddModelError("errors", "That id already exists.");
+                return StatusCode(409, ModelState);
+            }
+            var strength = await _strengthRepository.GetByIdAsync(newStrength.Id);
+            if(!_strengthRepository.HasUniqueName(newStrength.Id, newStrength.Name))
+            {
+                    ModelState.AddModelError("errors", "That name already exists.");
+                    return StatusCode(409, ModelState);
+            }
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             try
             {
-                await _strengthRepository.AddAsync(strength);
+                await _strengthRepository.AddAsync(newStrength);
             }
             catch (Exception e)
             {
-                ModelState.AddModelError("", e.GetBaseException().Message);
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);
             }
             
-            return CreatedAtAction("GetStrength", new { id = strength.Id }, strength);
+            return CreatedAtAction("GetStrength", new { id = newStrength.Id }, newStrength);
         }
 
         // DELETE: api/Strengths/5
@@ -114,7 +128,7 @@ namespace BolcherDbAPI.Controllers
             }
             catch (Exception e)
             {
-                ModelState.AddModelError("", e.GetBaseException().Message);
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);
             }
 

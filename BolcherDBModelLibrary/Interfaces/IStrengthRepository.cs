@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BolcherDBModelLibrary.Interfaces
 {
-    public interface IStrengthRepository : IGenericRepository<Strength>
+    public interface IStrengthRepository : IGenericRepository<Strength>, IUniqueNameable
     {
     }
 }

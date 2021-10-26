@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace BolcherDBModelLibrary.Interfaces
 {
-    public interface IColorRepository : IGenericRepository<Color>, ISearchable<Color>
+    public interface IColorRepository : IGenericRepository<Color>, ISearchable<Color>, IUniqueNameable
     {
     }
 }

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace BolcherDBModelLibrary.Interfaces
 {
-    public interface ICandyRepository : IGenericRepository<Candy>, ISearchable<Candy>
+    public interface ICandyRepository : IGenericRepository<Candy>, ISearchable<Candy>, IUniqueNameable
     {
     }
 }

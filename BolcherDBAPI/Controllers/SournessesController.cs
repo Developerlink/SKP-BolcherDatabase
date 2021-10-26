@@ -59,6 +59,11 @@ namespace BolcherDbAPI.Controllers
                 return BadRequest();
             if (!await _sournessRepository.ExistsAsync(id))
                 return NotFound();
+            if (!_sournessRepository.HasUniqueName(id, sourness.Name))
+            {
+                ModelState.AddModelError("errors", "That name already exists.");
+                return StatusCode(409, ModelState);
+            }
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
@@ -68,7 +73,7 @@ namespace BolcherDbAPI.Controllers
             }
             catch (Exception e)
             {
-                ModelState.AddModelError("", e.GetBaseException().Message);
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);
             }
 
@@ -77,26 +82,34 @@ namespace BolcherDbAPI.Controllers
 
         // POST: api/Sournesses
         [HttpPost]
-        public async Task<IActionResult> PostSourness(Sourness sourness)
+        public async Task<IActionResult> PostSourness(Sourness newSourness)
         {
-            if (sourness == null)
+            if (newSourness == null)
                 return BadRequest(ModelState);
-            if (await _sournessRepository.ExistsAsync(sourness.Id))
-                ModelState.AddModelError("", "A sourness with that id already exists.");
+            if (await _sournessRepository.ExistsAsync(newSourness.Id))
+            {
+                ModelState.AddModelError("errors", "That id already exists.");
+                return StatusCode(409, ModelState);
+            }
+            if (!_sournessRepository.HasUniqueName(newSourness.Id, newSourness.Name))
+            {
+                ModelState.AddModelError("errors", "That name already exists.");
+                return StatusCode(409, ModelState);
+            }
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             try
             {
-                await _sournessRepository.AddAsync(sourness);
+                await _sournessRepository.AddAsync(newSourness);
             }
             catch (Exception e)
             {
-                ModelState.AddModelError("", e.GetBaseException().Message);
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);
             }
 
-            return CreatedAtAction("GetSourness", new { id = sourness.Id }, sourness);
+            return CreatedAtAction("GetSourness", new { id = newSourness.Id }, newSourness);
         }
 
         // DELETE: api/Sournesses/5
@@ -114,7 +127,7 @@ namespace BolcherDbAPI.Controllers
             }
             catch (Exception e)
             {
-                ModelState.AddModelError("", e.GetBaseException().Message);
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);
             }
 

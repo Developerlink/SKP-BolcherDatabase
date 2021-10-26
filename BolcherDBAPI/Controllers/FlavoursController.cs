@@ -59,6 +59,11 @@ namespace BolcherDbAPI.Controllers
                 return BadRequest();
             if (!await _flavourRepository.ExistsAsync(id))
                 return NotFound();
+            if (!_flavourRepository.HasUniqueName(id, flavour.Name))
+            {
+                ModelState.AddModelError("errors", "That name already exists.");
+                return StatusCode(409, ModelState);
+            }
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
@@ -68,7 +73,7 @@ namespace BolcherDbAPI.Controllers
             }
             catch (Exception e)
             {
-                ModelState.AddModelError("", e.GetBaseException().Message);
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);
             }
 
@@ -82,7 +87,15 @@ namespace BolcherDbAPI.Controllers
             if (flavour == null)
                 return BadRequest(ModelState);
             if (await _flavourRepository.ExistsAsync(flavour.Id))
-                ModelState.AddModelError("", "A flavour with that id already exists");
+            {
+                ModelState.AddModelError("errors", "That id already exists.");
+                return StatusCode(409, ModelState);
+            }
+            if (!_flavourRepository.HasUniqueName(flavour.Id, flavour.Name))
+            {
+                ModelState.AddModelError("errors", "That name already exists.");
+                return StatusCode(409, ModelState);
+            }
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
@@ -92,7 +105,7 @@ namespace BolcherDbAPI.Controllers
             }
             catch (Exception e)
             {
-                ModelState.AddModelError("", e.GetBaseException().Message);
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);
             }
 
@@ -114,7 +127,7 @@ namespace BolcherDbAPI.Controllers
             }
             catch (Exception e)
             {
-                ModelState.AddModelError("", e.GetBaseException().Message);
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);
             }
 

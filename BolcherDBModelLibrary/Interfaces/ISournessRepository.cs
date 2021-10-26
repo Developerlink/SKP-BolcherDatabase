@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace BolcherDBModelLibrary.Interfaces
 {
-    public interface ISournessRepository : IGenericRepository<Sourness>
+    public interface ISournessRepository : IGenericRepository<Sourness>, IUniqueNameable
     {
     }
 }
