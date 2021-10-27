@@ -1,1 +1,1 @@
-﻿SELECT Id,ColorId,SournessId,StrengthId,FlavourId,Weight,ProductionCost,Name FROM dbo.Candy
+﻿SELECT TOP(1) Id, ColorId, FlavourId, Name, ProductionCost, SournessId, StrengthId, Weight FROM Candy ORDER BY NEWID()

@@ -35,6 +35,117 @@ namespace BolcherDbAPI.Controllers
             return Ok(candies);
         }
 
+        [HttpGet("color")]
+        public async Task<IActionResult> GetByColor([FromQuery] int? color_id, int? color2_id, int? not_color_id)
+        {
+            ICollection<Candy> candies = null;
+
+            if (not_color_id.HasValue)
+            {
+                candies = await _candyRepository.GetCandiesNotOfColor(not_color_id.Value);
+            }
+            else if (color_id.HasValue && color2_id.HasValue)
+            {
+                candies = await _candyRepository.GetCandiesByTwoColorsAsync(color_id.Value, color2_id.Value);
+            }
+            else if (color_id.HasValue)
+            {
+                candies = await _candyRepository.GetCandiesByColorAsync(color_id.Value);
+            }
+            else
+            {
+                ModelState.AddModelError("errors", "The request does not contain any color id's.");
+                return StatusCode(422, ModelState);
+            }
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            return Ok(candies);
+        }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> GetBySearch([FromQuery] string starts_with, string contains)
+        {
+            ICollection<Candy> candies = null;
+
+            if (starts_with != null)
+            {
+                candies = await _candyRepository.GetBySearchStartsWithAsync(starts_with);
+            }
+            else if (contains != null)
+            {
+                candies = await _candyRepository.GetBySearchContainsAsync(contains);
+            }
+            else
+            {
+                ModelState.AddModelError("errors", "The request does not contain any searh terms");
+                return StatusCode(422, ModelState);
+            }
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            return Ok(candies);
+        }
+
+        [HttpGet("weight")]
+        public async Task<IActionResult> GetByWeight([FromQuery] int? lower_limit, int? upper_limit)
+        {
+            ICollection<Candy> candies = null;
+
+            if (lower_limit.HasValue && upper_limit.HasValue)
+            {
+                candies = await _candyRepository.GetByWeightBetween(lower_limit.Value, upper_limit.Value);
+            }
+            else if (upper_limit.HasValue)
+            {
+                candies = await _candyRepository.GetByWeightLowerThan(upper_limit.Value);
+            }
+            else
+            {
+                ModelState.AddModelError("errors", "The request does not contain any weight limits.");
+                return StatusCode(422, ModelState);
+            }
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            return Ok(candies);
+        }
+
+        [HttpGet("weight/heaviest")]
+        public async Task<IActionResult> GetHeaviest([FromQuery]int take_amount)
+        {
+            ICollection<Candy> candies = null;
+
+            try
+            {
+                candies = await _candyRepository.GetHeaviestBy(take_amount);
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
+                return StatusCode(500, ModelState);
+            }
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            return Ok(candies);
+        }
+
+        [HttpGet("random")]
+        public IActionResult GetRandom()
+        {
+            var candy = _candyRepository.GetRandomCandy();
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            return Ok(candy);
+        }
+
         // GET: api/Candies/5
         [HttpGet("{id}")]
         public async Task<IActionResult> GetCandy(int id)
@@ -48,20 +159,6 @@ namespace BolcherDbAPI.Controllers
                 return BadRequest(ModelState);
 
             return Ok(candy);
-        }
-
-        [HttpGet("search")]
-        public async Task<IActionResult> GetBySearchStartsWith([FromQuery]string searchTerm)
-        {
-            if (searchTerm == null)
-                return BadRequest(ModelState);
-
-            var candies = await _candyRepository.GetBySearchStartsWithAsync(searchTerm);
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            return Ok(candies);
         }
 
         // PUT: api/Candies/5

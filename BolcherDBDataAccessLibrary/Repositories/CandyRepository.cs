@@ -19,22 +19,42 @@ namespace BolcherDBDataAccessLibrary.Repositories
 
         public async Task<ICollection<Candy>> GetCandiesByColorAsync(int colorId)
         {
-            return await Context.Candies.Where(c => c.ColorId == colorId).ToListAsync();
+            return await Context.Candies.Where(c => c.ColorId == colorId)
+                .Include(c => c.Color)
+                .Include(c => c.Flavour)
+                .Include(c => c.Sourness)
+                .Include(c => c.Strength)
+                .ToListAsync();
         }
 
         public async Task<ICollection<Candy>> GetCandiesByTwoColorsAsync(int colorOneId, int colorTwoId)
         {
-            return await Context.Candies.Where(c => c.ColorId == colorOneId || c.ColorId == colorTwoId).ToListAsync();
+            return await Context.Candies.Where(c => c.ColorId == colorOneId || c.ColorId == colorTwoId)
+                .Include(c => c.Color)
+                .Include(c => c.Flavour)
+                .Include(c => c.Sourness)
+                .Include(c => c.Strength)
+                .ToListAsync();
         }
 
         public async Task<ICollection<Candy>> GetCandiesNotOfColor(int colorId)
         {
-            return await Context.Candies.Where(c => c.ColorId != colorId).OrderBy(c => c.Name).ToListAsync();
+            return await Context.Candies.Where(c => c.ColorId != colorId).OrderBy(c => c.Name)
+                .Include(c => c.Color)
+                .Include(c => c.Flavour)
+                .Include(c => c.Sourness)
+                .Include(c => c.Strength)
+                .ToListAsync();
         }
 
         public async Task<ICollection<Candy>> GetByFilterAsync(string filter)
         {
-            return await Context.Candies.Where(c => EF.Functions.Like(c.Name.ToLower(), filter)).ToListAsync();
+            return await Context.Candies.Where(c => EF.Functions.Like(c.Name.ToLower(), filter))
+                .Include(c => c.Color)
+                .Include(c => c.Flavour)
+                .Include(c => c.Sourness)
+                .Include(c => c.Strength)
+                .ToListAsync();
         }
 
         public async Task<ICollection<Candy>> GetBySearchStartsWithAsync(string searchTerm)
@@ -53,12 +73,37 @@ namespace BolcherDBDataAccessLibrary.Repositories
 
         public async Task<ICollection<Candy>> GetByWeightLowerThan(int weight)
         {
-            return await Context.Candies.Where(c => c.Weight < weight).OrderBy(c => c.Weight).ToListAsync();
+            return await Context.Candies.Where(c => c.Weight < weight).OrderBy(c => c.Weight)
+                .Include(c => c.Color)
+                .Include(c => c.Flavour)
+                .Include(c => c.Sourness)
+                .Include(c => c.Strength)
+                .ToListAsync();
         }
 
         public async Task<ICollection<Candy>> GetByWeightBetween(int lowerWeightLimit, int upperWeightLimit)
         {
-            return await Context.Candies.Where(c => c.Weight >= lowerWeightLimit && c.Weight <= upperWeightLimit).OrderBy(c => c.Name).ToListAsync();
+            return await Context.Candies.Where(c => c.Weight >= lowerWeightLimit && c.Weight <= upperWeightLimit).OrderBy(c => c.Name).ThenBy(c => c.Weight)
+                .Include(c => c.Color)
+                .Include(c => c.Flavour)
+                .Include(c => c.Sourness)
+                .Include(c => c.Strength)
+                .ToListAsync();
+        }
+
+        public async Task<ICollection<Candy>> GetHeaviestBy(int amount)
+        {
+            return await Context.Candies.OrderByDescending(c => c.Weight).Take(amount)
+                .Include(c => c.Color)
+                .Include(c => c.Flavour)
+                .Include(c => c.Sourness)
+                .Include(c => c.Strength)
+                .ToListAsync();
+        }
+
+        public Candy GetRandomCandy()
+        {
+            return Context.Candies.OrderBy(c => Guid.NewGuid()).First();
         }
 
         public bool HasUniqueName(int id, string name)
