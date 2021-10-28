@@ -27,7 +27,17 @@ namespace BolcherDbAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetColors()
         {
-            var colors = await _colorRepository.GetAllAsync();
+            ICollection<Color> colors;
+
+            try
+            {
+                colors = await _colorRepository.GetAllAsync();
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
+                return StatusCode(500, ModelState);
+            }
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -42,7 +52,17 @@ namespace BolcherDbAPI.Controllers
             if (!await _colorRepository.ExistsAsync(id))
                 return NotFound();
 
-            var color = await _colorRepository.GetByIdAsync(id);
+            Color color;
+
+            try
+            {
+                color = await _colorRepository.GetByIdAsync(id);
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
+                return StatusCode(500, ModelState);
+            }
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);

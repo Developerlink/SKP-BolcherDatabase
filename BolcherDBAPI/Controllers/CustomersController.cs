@@ -26,7 +26,17 @@ namespace BolcherDbAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetCustomers()
         {
-            var customers = await _customerRepository.GetAllAsync();
+            ICollection<Customer> customers;
+
+            try
+            {
+                customers = await _customerRepository.GetAllAsync();
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
+                return StatusCode(500, ModelState);
+            }
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -41,7 +51,17 @@ namespace BolcherDbAPI.Controllers
             if (!await _customerRepository.ExistsAsync(id))
                 return NotFound();
 
-            var customer = await _customerRepository.GetByIdAsync(id);
+            Customer customer;
+
+            try
+            {
+                customer = await _customerRepository.GetByIdAsync(id);
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
+                return StatusCode(500, ModelState);
+            }
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);

@@ -27,7 +27,17 @@ namespace BolcherDbAPI.Controllers
         [ResponseCache(Duration = 300)]
         public async Task<IActionResult> GetCandies()
         {
-            var candies = await _candyRepository.GetAllAsync();
+            ICollection<Candy> candies;
+
+            try
+            {
+                candies = await _candyRepository.GetAllAsync();
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
+                return StatusCode(500, ModelState);
+            }
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -38,7 +48,7 @@ namespace BolcherDbAPI.Controllers
         [HttpGet("color")]
         public async Task<IActionResult> GetByColor([FromQuery] int? color_id, int? color2_id, int? not_color_id)
         {
-            ICollection<Candy> candies = null;
+            ICollection<Candy> candies;
 
             if (not_color_id.HasValue)
             {
@@ -67,7 +77,7 @@ namespace BolcherDbAPI.Controllers
         [HttpGet("search")]
         public async Task<IActionResult> GetBySearch([FromQuery] string starts_with, string contains)
         {
-            ICollection<Candy> candies = null;
+            ICollection<Candy> candies;
 
             if (starts_with != null)
             {
@@ -92,7 +102,7 @@ namespace BolcherDbAPI.Controllers
         [HttpGet("weight")]
         public async Task<IActionResult> GetByWeight([FromQuery] int? lower_limit, int? upper_limit)
         {
-            ICollection<Candy> candies = null;
+            ICollection<Candy> candies;
 
             if (lower_limit.HasValue && upper_limit.HasValue)
             {
@@ -115,9 +125,9 @@ namespace BolcherDbAPI.Controllers
         }
 
         [HttpGet("weight/heaviest")]
-        public async Task<IActionResult> GetHeaviest([FromQuery]int take_amount)
+        public async Task<IActionResult> GetHeaviest([FromQuery] int take_amount)
         {
-            ICollection<Candy> candies = null;
+            ICollection<Candy> candies;
 
             try
             {
@@ -138,7 +148,17 @@ namespace BolcherDbAPI.Controllers
         [HttpGet("random")]
         public IActionResult GetRandom()
         {
-            var candy = _candyRepository.GetRandomCandy();
+            Candy candy;
+
+            try
+            {
+                candy = _candyRepository.GetRandomCandy();
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
+                return StatusCode(500, ModelState);
+            }
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);

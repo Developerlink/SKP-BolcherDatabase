@@ -26,7 +26,17 @@ namespace BolcherDbAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetSournesses()
         {
-            var sournesses = await _sournessRepository.GetAllAsync();
+            ICollection<Sourness> sournesses;
+
+            try
+            {
+                sournesses = await _sournessRepository.GetAllAsync();
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
+                return StatusCode(500, ModelState);
+            }
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -41,7 +51,17 @@ namespace BolcherDbAPI.Controllers
             if (!await _sournessRepository.ExistsAsync(id))
                 return NotFound();
 
-            var sourness = await _sournessRepository.GetByIdAsync(id);
+            Sourness sourness;
+
+            try
+            {
+                sourness = await _sournessRepository.GetByIdAsync(id);
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
+                return StatusCode(500, ModelState);                
+            }
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);

@@ -26,7 +26,17 @@ namespace BolcherDbAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetSalesOrders()
         {
-            var salesOrders = await _salesOrderRepository.GetAllAsync();
+            ICollection<SalesOrder> salesOrders;
+
+            try
+            {
+                salesOrders = await _salesOrderRepository.GetAllAsync();
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
+                return StatusCode(500, ModelState);
+            }
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -41,7 +51,17 @@ namespace BolcherDbAPI.Controllers
             if (!await _salesOrderRepository.ExistsAsync(id))
                 return NotFound();
 
-            var salesOrder = await _salesOrderRepository.GetByIdAsync(id);
+            SalesOrder salesOrder;
+
+            try
+            {
+                salesOrder = await _salesOrderRepository.GetByIdAsync(id);
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
+                return StatusCode(500, ModelState);
+            }
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);

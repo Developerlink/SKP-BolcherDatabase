@@ -26,7 +26,17 @@ namespace BolcherDbAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetStrengths()
         {
-            var strengths = await _strengthRepository.GetAllAsync();
+            ICollection<Strength> strengths;
+
+            try
+            {
+                strengths = await _strengthRepository.GetAllAsync();
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
+                return StatusCode(500, ModelState);
+            }
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -41,7 +51,17 @@ namespace BolcherDbAPI.Controllers
             if (!await _strengthRepository.ExistsAsync(id))
                 return NotFound();
 
-            var strength = await _strengthRepository.GetByIdAsync(id);
+            Strength strength;
+
+            try
+            {
+                strength = await _strengthRepository.GetByIdAsync(id);
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
+                return StatusCode(500, ModelState);
+            }
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);

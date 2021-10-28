@@ -26,7 +26,17 @@ namespace BolcherDbAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetFlavours()
         {
-            var flavours = await _flavourRepository.GetAllAsync();
+            ICollection<Flavour> flavours;
+
+            try
+            {
+                flavours = await _flavourRepository.GetAllAsync();
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
+                return StatusCode(500, ModelState);
+            }
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -41,7 +51,17 @@ namespace BolcherDbAPI.Controllers
             if (!await _flavourRepository.ExistsAsync(id))
                 return NotFound();
 
-            var flavour = await _flavourRepository.GetByIdAsync(id);
+            Flavour flavour;
+
+            try
+            {
+                flavour = await _flavourRepository.GetByIdAsync(id);
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
+                return StatusCode(500, ModelState);
+            }
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
