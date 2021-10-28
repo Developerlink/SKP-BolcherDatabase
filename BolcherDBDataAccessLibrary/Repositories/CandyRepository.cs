@@ -47,6 +47,16 @@ namespace BolcherDBDataAccessLibrary.Repositories
                 .ToListAsync();
         }
 
+        public override async Task<ICollection<Candy>> GetAllAsync()
+        {
+            return await Context.Candies
+                .Include(c => c.Color)
+                .Include(c => c.Flavour)
+                .Include(c => c.Sourness)
+                .Include(c => c.Strength)
+                .ToListAsync();
+        }
+
         public async Task<ICollection<Candy>> GetByFilterAsync(string filter)
         {
             return await Context.Candies.Where(c => EF.Functions.Like(c.Name.ToLower(), filter))
@@ -103,7 +113,12 @@ namespace BolcherDBDataAccessLibrary.Repositories
 
         public Candy GetRandomCandy()
         {
-            return Context.Candies.OrderBy(c => Guid.NewGuid()).First();
+            return Context.Candies.OrderBy(c => Guid.NewGuid())
+                .Include(c => c.Color)
+                .Include(c => c.Flavour)
+                .Include(c => c.Sourness)
+                .Include(c => c.Strength)
+                .First();
         }
 
         public bool HasUniqueName(int id, string name)

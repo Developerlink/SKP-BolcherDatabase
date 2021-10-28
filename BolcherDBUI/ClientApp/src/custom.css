@@ -13,6 +13,10 @@ code {
   border-color: #1861ac;
 }
 
+h5 {
+  margin-top: 2.5rem;
+}
+
 h6 {
   color: rgb(13, 197, 93);
 }

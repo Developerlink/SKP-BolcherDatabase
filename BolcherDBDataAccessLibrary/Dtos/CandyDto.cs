@@ -20,7 +20,10 @@ namespace BolcherDBModelLibrary
             Name = candy.Name;
             Weight = candy.Weight;
             ProductionCost = candy.ProductionCost;
-            Amount = candy.OrderLines.Where(o => o.CandyId == candy.Id).Select(o => o.Amount).FirstOrDefault();
+            if (candy.OrderLines != null && candy.OrderLines.Any())
+            {
+                Amount = candy.OrderLines.Where(o => o.CandyId == candy.Id).Select(o => o.Amount).FirstOrDefault();
+            }
             Color = new ColorDto(candy.Color);
             Flavour = new FlavourDto(candy.Flavour);
             Sourness = new SournessDto(candy.Sourness);

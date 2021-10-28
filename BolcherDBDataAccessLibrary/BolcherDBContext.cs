@@ -16,6 +16,7 @@ namespace BolcherDBDataAccessLibrary
         public BolcherDBContext(DbContextOptions<BolcherDBContext> options)
             : base(options)
         {
+            ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
         }
 
         public virtual DbSet<Candy> Candies { get; set; }

@@ -2,9 +2,6 @@ import React, { Component } from "react";
 import { Container } from "reactstrap";
 import { NavMenu } from "./NavMenu";
 import { Route } from 'react-router';
-import { Home } from './Home';
-import { FetchData } from './FetchData';
-import { Counter } from './Counter';
 import SQL02 from "./SQL02";
 import SQL03 from "./SQL03";
 
