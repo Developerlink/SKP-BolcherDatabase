@@ -74,11 +74,33 @@ namespace BolcherDBDataAccessLibrary.Repositories
             return candies;
         }
 
+        public async Task<ICollection<Candy>> GetBySearchStartsWithAndColorIdAsync(string searchTerm, int colorId)
+        {
+            string filter = $"{searchTerm.ToLower()}%";
+            return await Context.Candies.Where(c => EF.Functions.Like(c.Name.ToLower(), filter) && c.ColorId == colorId)
+                .Include(c => c.Color)
+                .Include(c => c.Flavour)
+                .Include(c => c.Sourness)
+                .Include(c => c.Strength)
+                .ToListAsync();
+        }
+
         public async Task<ICollection<Candy>> GetBySearchContainsAsync(string searchTerm)
         {
             string filter = $"%{searchTerm.ToLower()}%";
             var candies = await GetByFilterAsync(filter);
             return candies;
+        }
+
+        public async Task<ICollection<Candy>> GetBySearchContainsAndColorAsync(string searchTerm, int colorId)
+        {
+            string filter = $"%{searchTerm.ToLower()}%";
+            return await Context.Candies.Where(c => EF.Functions.Like(c.Name.ToLower(), filter) && c.ColorId == colorId)
+                .Include(c => c.Color)
+                .Include(c => c.Flavour)
+                .Include(c => c.Sourness)
+                .Include(c => c.Strength)
+                .ToListAsync();
         }
 
         public async Task<ICollection<Candy>> GetByWeightLowerThan(int weight)

@@ -20,3 +20,13 @@ h5 {
 h6 {
   color: rgb(13, 197, 93);
 }
+
+button {
+  margin-bottom: 1rem;
+}
+
+.search {
+  display: inline-block;
+  margin-left: 1rem;
+  width: 15rem;
+}

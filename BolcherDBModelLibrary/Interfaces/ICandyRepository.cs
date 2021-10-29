@@ -10,6 +10,8 @@ namespace BolcherDBModelLibrary.Interfaces
     public interface ICandyRepository : IGenericRepository<Candy>, ISearchable<Candy>, IUniqueNameable
     {
         Task<ICollection<Candy>> GetBySearchContainsAsync(string searchTerm);
+        Task<ICollection<Candy>> GetBySearchStartsWithAndColorIdAsync(string searchTerm, int colorId);
+        Task<ICollection<Candy>> GetBySearchContainsAndColorAsync(string searchTerm, int colorId);
         Task<ICollection<Candy>> GetByWeightBetween(int lowerWeightLimit, int upperWeightLimit);
         Task<ICollection<Candy>> GetByWeightLowerThan(int weight);
         Task<ICollection<Candy>> GetCandiesByColorAsync(int colorId);

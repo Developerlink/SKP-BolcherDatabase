@@ -75,17 +75,31 @@ namespace BolcherDbAPI.Controllers
         }
 
         [HttpGet("search")]
-        public async Task<IActionResult> GetBySearch([FromQuery] string starts_with, string contains)
+        public async Task<IActionResult> GetBySearch([FromQuery] string starts_with, string contains, int? colorId)
         {
             ICollection<Candy> candies;
 
             if (starts_with != null)
             {
-                candies = await _candyRepository.GetBySearchStartsWithAsync(starts_with);
+                if (colorId.HasValue)
+                {
+                    candies = await _candyRepository.GetBySearchStartsWithAndColorIdAsync(starts_with, colorId.Value);
+                }
+                else
+                {
+                    candies = await _candyRepository.GetBySearchStartsWithAsync(starts_with);
+                }
             }
             else if (contains != null)
             {
-                candies = await _candyRepository.GetBySearchContainsAsync(contains);
+                if (colorId.HasValue)
+                {
+                    candies = await _candyRepository.GetBySearchContainsAndColorAsync(contains, colorId.Value);
+                }
+                else 
+                {
+                    candies = await _candyRepository.GetBySearchContainsAsync(contains);
+                }
             }
             else
             {
