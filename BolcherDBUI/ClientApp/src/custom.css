@@ -30,3 +30,12 @@ button {
   margin-left: 1rem;
   width: 15rem;
 }
+
+.save-button {
+  margin-top: 1rem;
+}
+
+.button-right {
+  display: flex;
+  justify-content: flex-end;
+}

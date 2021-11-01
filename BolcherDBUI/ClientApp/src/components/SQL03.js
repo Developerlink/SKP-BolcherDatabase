@@ -4,7 +4,7 @@ import "../custom.css";
 import CandyTable from "./CandyTable";
 
 const SQL03 = () => {
-  const [candies, setCandies] = useState();
+  const [candies, setCandies] = useState([]);
   const [colors, setColors] = useState([]);
   const [selectedColorID, setSelectedColorID] = useState(0);
   const [showingError, setShowingError] = useState(false);
@@ -96,6 +96,7 @@ const SQL03 = () => {
         }
       } else {
         setShowingError(true);
+        setShowingNoResultsMessage(false);
       }
     }
   };
@@ -118,24 +119,20 @@ const SQL03 = () => {
   const onChangeHandler = async (event) => {
     const { value } = event.target;
     console.log(value);
-    setSelectedColorID(value);
+    setSelectedColorID(parseInt(value));
   };
 
   return (
     <React.Fragment>
       <h1>SQL-03</h1>
-      {showingError && <h5>Vælg søgekriterier eller klik på <em>Vis Alle</em></h5>}
       <Row>
-        <Button onClick={showAllHandler} color="primary">
-          Vis alle
-        </Button>
         <Input
           className="search"
           name="contains"
           type="text"
           placeholder="søg bolcher som indeholder"
           onKeyPress={onKeyPressHandler}
-        />
+          />
         <Input
           className="search"
           name="starts"
@@ -149,7 +146,7 @@ const SQL03 = () => {
           name="color"
           value={selectedColorID}
           onChange={onChangeHandler}
-        >
+          >
           <option onClick={onChangeHandler} key={0} value={0}>
             Vælg farve
           </option>
@@ -159,9 +156,13 @@ const SQL03 = () => {
             </option>
           ))}
         </Input>
+        <Button className="search" onClick={showAllHandler} color="primary">
+          Vis alle
+        </Button>
       </Row>
       {candies && <CandyTable candies={candies} />}
-      {showingNoResultsMessage && <h5>There are no candies matching your search</h5>}
+      {showingError && <h5>Vælg søgekriterier eller klik på <em>Vis Alle</em></h5>}
+      {showingNoResultsMessage && <h5>Der er ingen bolcher der matcher din søgning</h5>}
     </React.Fragment>
   );
 };
