@@ -28,5 +28,30 @@ namespace BolcherDBDataAccessLibrary.Repositories
             var customers = await GetByFilterAsync(filter);
             return customers;
         }
+
+        public async Task<ICollection<Customer>> GetCustomersWhoBoughtSpecificCandy(int candyId)
+        {
+            var customers = await Context.OrderLines.Where(o => o.CandyId == candyId)
+                .Select(o => o.SalesOrder)
+                .Select(s => s.Customer)
+                .Include(c => c.SalesOrders)
+                .ThenInclude(s => s.OrderLines)
+                .ThenInclude(o => o.Candy)
+                .ToListAsync();
+            return customers;
+        }
+
+        public async Task<ICollection<Customer>> GetCustomersWithSalesOrders()
+        {
+            var customers = await Context.OrderLines
+                .Select(o => o.SalesOrder)
+                .Select(s => s.Customer)
+                .Distinct()
+                .Include(c => c.SalesOrders)
+                .ThenInclude(s => s.OrderLines)
+                .ThenInclude(o => o.Candy)
+                .ToListAsync();
+            return customers;
+        }
     }
 }

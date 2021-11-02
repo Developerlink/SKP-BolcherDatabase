@@ -8,6 +8,7 @@ const SQL05 = () => {
   const [cartedCandies, setCartedCandies] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [selectedCustomerId, setSelectedCustomer] = useState(0);
+  const [salesOrders, setSalesOrders] = useState([]);
 
   const fetchCandies = async () => {
     let url = "http://172.16.6.27:5000/api/Candies/";
@@ -43,9 +44,21 @@ const SQL05 = () => {
     }
   };
 
+  const fetchSalesOrders = async () => {
+    let url = "http://172.16.6.27:5000/api/salesorders";
+    try {
+      const response = await fetch(url, { method: "GET" });
+      const loadedSalesOrders = await response.json();
+      setSalesOrders(loadedSalesOrders);
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
   const onSelectCustomerHandler = (event) => {
     const { value: customerId } = event.target;
     setSelectedCustomer(parseInt(customerId));
+    setCartedCandies([]);
   };
 
   const onSelectCandyHandler = (event) => {
@@ -74,46 +87,60 @@ const SQL05 = () => {
   };
 
   const pushSalesOrder = async (salesOrder) => {
-    let url = '';
+    let url = "http://172.16.6.27:5000/api/salesorders";
     try {
-      const response = await fetch(url, {method:"POST"});      
+      const response = await fetch(url, {
+        method: "POST",
+        body: JSON.stringify(salesOrder),
+        headers: {
+          Accept: "application/json",
+          "Content-type": "application/json",
+        },
+      });
+      const data = await response.json();
+      console.log(data);
     } catch (error) {
       console.log(error.message);
     }
-  }
+  };
 
   const addOrderHandler = () => {
     let customerId;
 
     if (selectedCustomerId === 0) {
-      setSelectedCustomer(customerId);
       customerId = customers[0].id;
+      setSelectedCustomer(customerId);
     } else {
       customerId = selectedCustomerId;
     }
 
     let newDate = new Date();
     let newOrderLines = [];
-    cartedCandies.forEach(candy => {
+    cartedCandies.forEach((candy) => {
       newOrderLines.push({
         candyId: candy.id,
         salesOrderId: 0,
-        amount: candy.amount
-      })
+        amount: candy.amount,
+      });
     });
 
     let salesOrder = {
       customerId: customerId,
       orderDate: newDate,
-      orderLines: newOrderLines
+      orderLines: newOrderLines,
     };
 
     console.log(salesOrder);
-  };  
+
+    pushSalesOrder(salesOrder);
+    setCartedCandies([]);
+    fetchSalesOrders();
+  };
 
   useEffect(() => {
     fetchCandies();
     fetchCustomers();
+    fetchSalesOrders();
   }, []);
 
   return (
@@ -205,6 +232,24 @@ const SQL05 = () => {
         </Col>
         <Col>
           <h3>Ordrer</h3>
+          <Table>
+              <thead>
+                <tr>
+                  <th>Id</th>
+                  <th>Kunde</th>
+                  <th>Antal typer a bolcher</th>
+                </tr>
+              </thead>
+              <tbody>
+                {salesOrders.map((salesOrder) => (
+                  <tr key={salesOrder.id}>
+                    <th scope="row">{salesOrder.id}</th>
+                    <td>{salesOrder.customer.firstName}</td>
+                    <td>{salesOrder.orderLines.length}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
         </Col>
       </Row>
     </React.Fragment>

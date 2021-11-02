@@ -16,21 +16,34 @@ namespace BolcherDbAPI.Controllers
     public class SalesOrdersController : ControllerBase
     {
         private readonly ISalesOrderRepository _salesOrderRepository;
+        private readonly IOrderLineRepository _orderLineRepository;
+        private readonly ICustomerRepository _customerRepository;
 
-        public SalesOrdersController(ISalesOrderRepository salesOrderRepository)
+        public SalesOrdersController(ISalesOrderRepository salesOrderRepository,
+            IOrderLineRepository orderLineRepository,
+            ICustomerRepository customerRepository)
         {
             _salesOrderRepository = salesOrderRepository;
+            _orderLineRepository = orderLineRepository;
+            _customerRepository = customerRepository;
         }
 
         // GET: api/SalesOrders
         [HttpGet]
-        public async Task<IActionResult> GetSalesOrders()
+        public async Task<IActionResult> GetSalesOrders([FromQuery] string order_by_date)
         {
             ICollection<SalesOrder> salesOrders;
 
             try
             {
-                salesOrders = await _salesOrderRepository.GetAllAsync();
+                if (order_by_date != null)
+                {
+                    salesOrders = await _salesOrderRepository.GetAllSortedByDate();
+                }
+                else
+                {
+                    salesOrders = await _salesOrderRepository.GetAllAsync();
+                }
             }
             catch (Exception e)
             {
@@ -38,10 +51,25 @@ namespace BolcherDbAPI.Controllers
                 return StatusCode(500, ModelState);
             }
 
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             return Ok(salesOrders);
+        }
+
+        [HttpGet("latest")]
+        public async Task<IActionResult> GetLatestSalesorder()
+        {
+            SalesOrder salesOrder;
+
+            try
+            {
+                salesOrder = await _salesOrderRepository.GetByLatestOrderDate();
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
+                return StatusCode(500, ModelState);
+            }
+
+            return Ok(salesOrder);
         }
 
         // GET: api/SalesOrders/5
@@ -62,9 +90,6 @@ namespace BolcherDbAPI.Controllers
                 ModelState.AddModelError("errors", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);
             }
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
 
             return Ok(salesOrder);
         }
@@ -101,6 +126,11 @@ namespace BolcherDbAPI.Controllers
         {
             if (salesOrder == null)
                 return BadRequest(ModelState);
+            if (!await _customerRepository.ExistsAsync(salesOrder.CustomerId))
+            {
+                ModelState.AddModelError("errors", "That customer id does not exist.");
+                return StatusCode(404, ModelState);
+            }
             if (await _salesOrderRepository.ExistsAsync(salesOrder.Id))
                 ModelState.AddModelError("", "A sales order with that id already exists");
             if (!ModelState.IsValid)
@@ -116,6 +146,8 @@ namespace BolcherDbAPI.Controllers
                 return StatusCode(500, ModelState);
             }
 
+            // Check if database GETUTCDate fucks things up.
+
             return CreatedAtAction("GetSalesOrder", new { id = salesOrder.Id }, salesOrder);
         }
 
@@ -127,6 +159,16 @@ namespace BolcherDbAPI.Controllers
                 return NotFound();
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
+
+            try
+            {
+                await _orderLineRepository.DeleteOrderLinesBySalesOrderIdAsync(id);
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
+                return StatusCode(500, ModelState);
+            }
 
             try
             {

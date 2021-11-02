@@ -16,22 +16,16 @@ namespace BolcherDBDataAccessLibrary.Repositories
             Context = context;
         }
 
-        public async Task AddAsync(TEntity entity)
+        public virtual async Task AddAsync(TEntity entity)
         {
             Context.Set<TEntity>().Add(entity);
             await SaveAsync();
         }
 
-        public async Task DeleteAsync(int id)
+        public virtual async Task DeleteAsync(int id)
         {
             var entityToDelete = await GetByIdAsync(id);
             Context.Set<TEntity>().Remove(entityToDelete);
-            await SaveAsync();
-        }
-
-        public async Task DeleteAsync(TEntity entity)
-        {
-            Context.Set<TEntity>().Remove(entity);
             await SaveAsync();
         }
 
@@ -49,7 +43,7 @@ namespace BolcherDBDataAccessLibrary.Repositories
             return entities;
         }
 
-        public async Task<TEntity> GetByIdAsync(int id)
+        public virtual async Task<TEntity> GetByIdAsync(int id)
         {
             var entity = await Context.Set<TEntity>().FindAsync(id);
             return entity;
@@ -60,7 +54,7 @@ namespace BolcherDBDataAccessLibrary.Repositories
             await Context.SaveChangesAsync();
         }
 
-        public async Task UpdateAsync(TEntity entity)
+        public virtual async Task UpdateAsync(TEntity entity)
         {
             Context.Set<TEntity>().Update(entity);
             await SaveAsync();

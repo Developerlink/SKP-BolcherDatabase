@@ -9,5 +9,7 @@ namespace BolcherDBModelLibrary.Interfaces
 {
     public interface ISalesOrderRepository : IGenericRepository<SalesOrder>
     {
+        Task<ICollection<SalesOrder>> GetAllSortedByDate();
+        Task<SalesOrder> GetByLatestOrderDate();
     }
 }

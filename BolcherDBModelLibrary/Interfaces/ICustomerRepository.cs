@@ -9,5 +9,7 @@ namespace BolcherDBModelLibrary.Interfaces
 {
     public interface ICustomerRepository : IGenericRepository<Customer>, ISearchable<Customer>
     {
+        Task<ICollection<Customer>> GetCustomersWithSalesOrders();
+        Task<ICollection<Customer>> GetCustomersWhoBoughtSpecificCandy(int candyId);
     }
 }

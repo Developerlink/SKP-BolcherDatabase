@@ -16,21 +16,30 @@ namespace BolcherDbAPI.Controllers
     public class CustomersController : ControllerBase
     {
         private readonly ICustomerRepository _customerRepository;
+        private readonly ICandyRepository _candyRepository;
 
-        public CustomersController(ICustomerRepository customerRepository)
+        public CustomersController(ICustomerRepository customerRepository, ICandyRepository candyRepository)
         {
             _customerRepository = customerRepository;
+            _candyRepository = candyRepository;
         }
 
         // GET: api/Customers
         [HttpGet]
-        public async Task<IActionResult> GetCustomers()
+        public async Task<IActionResult> GetCustomers([FromQuery] string has_orders)
         {
             ICollection<Customer> customers;
 
             try
             {
-                customers = await _customerRepository.GetAllAsync();
+                if (has_orders != null && has_orders == "true")
+                {
+                    customers = await _customerRepository.GetCustomersWithSalesOrders();
+                }
+                else
+                {
+                    customers = await _customerRepository.GetAllAsync();
+                }
             }
             catch (Exception e)
             {
@@ -38,8 +47,29 @@ namespace BolcherDbAPI.Controllers
                 return StatusCode(500, ModelState);
             }
 
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            return Ok(customers);
+        }
+
+        [HttpGet("candy/{candyId}")]
+        public async Task<IActionResult> GetCustomersByCandyId(int candyId)
+        {
+            if (!await _candyRepository.ExistsAsync(candyId))
+            {
+                ModelState.AddModelError("errors", "That candy's id does not exist.");
+                return StatusCode(404, ModelState);
+            }
+
+            ICollection<Customer> customers;
+
+            try
+            {
+                customers = await _customerRepository.GetCustomersWhoBoughtSpecificCandy(candyId);
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
+                return StatusCode(500, ModelState);
+            }
 
             return Ok(customers);
         }
@@ -62,9 +92,6 @@ namespace BolcherDbAPI.Controllers
                 ModelState.AddModelError("errors", e.GetBaseException().Message);
                 return StatusCode(500, ModelState);
             }
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
 
             return Ok(customer);
         }

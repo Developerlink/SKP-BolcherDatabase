@@ -43,7 +43,8 @@ namespace BolcherDBAPI
                 .AddScoped<IFlavourRepository, FlavourRepository>()
                 .AddScoped<ISalesOrderRepository, SalesOrderRepository>()
                 .AddScoped<ISournessRepository, SournessRepository>()
-                .AddScoped<IStrengthRepository, StrengthRepository>();             
+                .AddScoped<IStrengthRepository, StrengthRepository>()
+                .AddScoped<IOrderLineRepository, OrderLineRepository>();             
 
 
             services.AddSwaggerGen(c =>
