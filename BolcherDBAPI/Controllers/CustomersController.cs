@@ -17,16 +17,20 @@ namespace BolcherDbAPI.Controllers
     {
         private readonly ICustomerRepository _customerRepository;
         private readonly ICandyRepository _candyRepository;
+        private readonly IStrengthRepository _strengthRepository;
 
-        public CustomersController(ICustomerRepository customerRepository, ICandyRepository candyRepository)
+        public CustomersController(ICustomerRepository customerRepository, 
+            ICandyRepository candyRepository,
+            IStrengthRepository strengthRepository)
         {
             _customerRepository = customerRepository;
             _candyRepository = candyRepository;
+            _strengthRepository = strengthRepository;
         }
 
         // GET: api/Customers
         [HttpGet]
-        public async Task<IActionResult> GetCustomers([FromQuery] string has_orders)
+        public async Task<IActionResult> GetCustomers([FromQuery] string has_orders, string above100, int? above_amount)
         {
             ICollection<Customer> customers;
 
@@ -34,7 +38,52 @@ namespace BolcherDbAPI.Controllers
             {
                 if (has_orders != null && has_orders == "true")
                 {
-                    customers = await _customerRepository.GetCustomersWithSalesOrders();
+                    if (above100 != null && above100 == "true")
+                    {
+                        customers = new List<Customer>();
+                        var preCustomers = await _customerRepository.GetCustomersWithSalesOrders();
+
+                        foreach (var customer in preCustomers)
+                        {
+                            int sumOfWeightOfBoughtCandies = 0;
+                            foreach (var salesOrder in customer.SalesOrders)
+                            {
+                                foreach (var orderLine in salesOrder.OrderLines)
+                                {
+                                    sumOfWeightOfBoughtCandies += orderLine.Candy.Weight * orderLine.Amount;
+                                }
+                            }
+                            if (sumOfWeightOfBoughtCandies > 100)
+                            {
+                                customers.Add(customer);
+                            }
+                        }
+                    }
+                    else if (above_amount.HasValue)
+                    {
+                        customers = new List<Customer>();
+                        var preCustomers = await _customerRepository.GetCustomersWithSalesOrders();
+
+                        foreach (var customer in preCustomers)
+                        {
+                            double sumMoneySpend = 0;
+                            foreach (var salesOrder in customer.SalesOrders)
+                            {
+                                foreach (var orderLine in salesOrder.OrderLines)
+                                {
+                                    sumMoneySpend += (orderLine.Candy.ProductionCost*3.5)*1.25 * orderLine.Amount;
+                                }
+                            }
+                            if (sumMoneySpend > above_amount*100)
+                            {
+                                customers.Add(customer);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        customers = await _customerRepository.GetCustomersWithSalesOrders();
+                    }
                 }
                 else
                 {
@@ -64,6 +113,30 @@ namespace BolcherDbAPI.Controllers
             try
             {
                 customers = await _customerRepository.GetCustomersWhoBoughtSpecificCandy(candyId);
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("errors", e.GetBaseException().Message);
+                return StatusCode(500, ModelState);
+            }
+
+            return Ok(customers);
+        }
+
+        [HttpGet("candy/strength/{strengthId}")]
+        public async Task<IActionResult> GetCustomersByCandyStrengthId(int strengthId)
+        {
+            if (!await _strengthRepository.ExistsAsync(strengthId))
+            {
+                ModelState.AddModelError("errors", "That strength's id does not exist.");
+                return StatusCode(404, ModelState);
+            }
+
+            ICollection<Customer> customers;
+
+            try
+            {
+                customers = await _customerRepository.GetCustomersWhoBoughtCandyWithStrength(strengthId);
             }
             catch (Exception e)
             {

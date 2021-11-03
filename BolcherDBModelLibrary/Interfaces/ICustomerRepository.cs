@@ -11,5 +11,6 @@ namespace BolcherDBModelLibrary.Interfaces
     {
         Task<ICollection<Customer>> GetCustomersWithSalesOrders();
         Task<ICollection<Customer>> GetCustomersWhoBoughtSpecificCandy(int candyId);
+        Task<ICollection<Customer>> GetCustomersWhoBoughtCandyWithStrength(int candyStrengthId);
     }
 }

@@ -22,6 +22,15 @@ namespace BolcherDBDataAccessLibrary.Repositories
             return await Context.Customers.Where(c => EF.Functions.Like(c.FirstName, filter)).ToListAsync();
         }
 
+        public async override Task<Customer> GetByIdAsync(int id)
+        {
+            return await Context.Customers.Where(c => c.Id == id)
+                .Include(c => c.SalesOrders)
+                .ThenInclude(s => s.OrderLines)
+                .ThenInclude(o => o.Candy)
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<ICollection<Customer>> GetBySearchStartsWithAsync(string searchTerm)
         {
             var filter = $"{searchTerm.ToLower()}%";
@@ -31,9 +40,39 @@ namespace BolcherDBDataAccessLibrary.Repositories
 
         public async Task<ICollection<Customer>> GetCustomersWhoBoughtSpecificCandy(int candyId)
         {
-            var customers = await Context.OrderLines.Where(o => o.CandyId == candyId)
-                .Select(o => o.SalesOrder)
-                .Select(s => s.Customer)
+            List<int> customerIds = await Context.Customers
+                .FromSqlInterpolated($"SELECT Customer.id FROM Customer INNER JOIN SalesOrder ON SalesOrder.CustomerId = Customer.id INNER JOIN OrderLine ON OrderLine.SalesOrderId = SalesOrder.Id INNER JOIN Candy ON Candy.Id = OrderLine.CandyId WHERE CandyId = {candyId}")
+                .Select(c => c.Id)
+                .ToListAsync();
+
+            var customers = await Context.Customers.Where(c => customerIds.Contains(c.Id))
+                .Include(c => c.SalesOrders)
+                .ThenInclude(s => s.OrderLines)
+                .ThenInclude(o => o.Candy)
+                .AsSplitQuery()
+                .ToListAsync();
+            return customers;
+        }
+
+        public async Task<ICollection<Customer>> GetCustomersWhoBoughtCandyWithStrength(int candyStrengthId)
+        {
+            List<int> customerIds = await Context.Customers
+                .FromSqlInterpolated($"SELECT Customer.id FROM Customer INNER JOIN SalesOrder ON SalesOrder.CustomerId = Customer.id INNER JOIN OrderLine ON OrderLine.SalesOrderId = SalesOrder.Id INNER JOIN Candy ON Candy.Id = OrderLine.CandyId INNER JOIN Strength ON Strength.Id = Candy.StrengthId WHERE StrengthId = {candyStrengthId}")
+                .Select(c => c.Id)
+                .ToListAsync();
+
+            var customers = await Context.Customers.Where(c => customerIds.Contains(c.Id))
+                .Include(c => c.SalesOrders)
+                .ThenInclude(s => s.OrderLines)
+                .ThenInclude(o => o.Candy)
+                .AsSplitQuery()
+                .ToListAsync();
+            return customers;
+        }
+
+        public async Task<ICollection<Customer>> GetCustomersWithSalesOrders()
+        {
+            var customers = await Context.Customers.Where(c => c.SalesOrders.Count > 0)
                 .Include(c => c.SalesOrders)
                 .ThenInclude(s => s.OrderLines)
                 .ThenInclude(o => o.Candy)
@@ -41,17 +80,12 @@ namespace BolcherDBDataAccessLibrary.Repositories
             return customers;
         }
 
-        public async Task<ICollection<Customer>> GetCustomersWithSalesOrders()
+        public async override Task<ICollection<Customer>> GetAllAsync()
         {
-            var customers = await Context.OrderLines
-                .Select(o => o.SalesOrder)
-                .Select(s => s.Customer)
-                .Distinct()
+            return await Context.Customers
                 .Include(c => c.SalesOrders)
-                .ThenInclude(s => s.OrderLines)
-                .ThenInclude(o => o.Candy)
+                .OrderByDescending(c => c.SalesOrders.Count)
                 .ToListAsync();
-            return customers;
         }
     }
 }

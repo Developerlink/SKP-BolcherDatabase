@@ -12,8 +12,8 @@ const SQL04 = () => {
       const loadedCandies = await response.json();
       let calculatedCandies = []
       loadedCandies.forEach(candy => {
-        let nettoPrice = candy.productionCost + candy.productionCost*2.5;
-        let salesPrice = nettoPrice + nettoPrice*0.25;
+        let nettoPrice = candy.productionCost*3.5;
+        let salesPrice = nettoPrice*1.25;
         let weightPrice = (salesPrice/candy.weight);
         calculatedCandies.push({
           ...candy,
