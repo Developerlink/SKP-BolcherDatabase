@@ -50,6 +50,7 @@ const SQL05 = () => {
       const response = await fetch(url, { method: "GET" });
       const loadedSalesOrders = await response.json();
       setSalesOrders(loadedSalesOrders);
+      console.log("Fetching sales orders");
     } catch (error) {
       console.log(error.message);
     }
@@ -75,9 +76,9 @@ const SQL05 = () => {
   };
 
   const onAmountChangeHandler = (event) => {
-    const { value, id } = event.target;
+    const { value, id: index, key } = event.target;
     let items = [...cartedCandies];
-    let index = items.findIndex((x) => x.id === parseInt(id));
+    let indexById = items.findIndex((x) => x.id === parseInt(key));
     let item = {
       ...items[index],
       amount: parseInt(value),
@@ -86,7 +87,7 @@ const SQL05 = () => {
     setCartedCandies(items);
   };
 
-  const pushSalesOrder = async (salesOrder) => {
+  const postSalesOrder = async (salesOrder) => {
     let url = "http://172.16.6.27:5000/api/salesorders";
     try {
       const response = await fetch(url, {
@@ -132,7 +133,7 @@ const SQL05 = () => {
 
     console.log(salesOrder);
 
-    pushSalesOrder(salesOrder);
+    postSalesOrder(salesOrder);
     setCartedCandies([]);
     fetchSalesOrders();
   };
@@ -198,13 +199,14 @@ const SQL05 = () => {
                 </tr>
               </thead>
               <tbody>
-                {cartedCandies.map((candy) => (
-                  <tr key={candy.id}>
+                {cartedCandies.map((candy, index) => (
+                  <tr key={candy.id}
+                  >
                     <th scope="row">{candy.name}</th>
                     <td>
                       <Input
                         key={candy.id}
-                        id={candy.id}
+                        id={index}
                         type="number"
                         value={candy.amount}
                         step="1"
