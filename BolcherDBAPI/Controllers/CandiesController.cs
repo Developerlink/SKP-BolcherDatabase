@@ -74,6 +74,7 @@ namespace BolcherDbAPI.Controllers
             return Ok(candies);
         }
 
+        // Testing Github
         [HttpGet("search")]
         public async Task<IActionResult> GetBySearch([FromQuery] string starts_with, string contains, int? colorId)
         {
@@ -96,7 +97,7 @@ namespace BolcherDbAPI.Controllers
                 {
                     candies = await _candyRepository.GetBySearchContainsAndColorAsync(contains, colorId.Value);
                 }
-                else 
+                else
                 {
                     candies = await _candyRepository.GetBySearchContainsAsync(contains);
                 }
